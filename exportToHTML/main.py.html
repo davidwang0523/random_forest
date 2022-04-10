@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>main.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6a8759;}
+.s3 { color: #808080;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+main.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">joblib</span>
+<span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+<span class="s0">import </span><span class="s1">re</span>
+<span class="s0">import </span><span class="s1">jieba</span>
+<span class="s0">from </span><span class="s1">sklearn.feature_extraction.text </span><span class="s0">import </span><span class="s1">TfidfVectorizer</span>
+<span class="s0">import </span><span class="s1">warnings</span>
+<span class="s0">from </span><span class="s1">sklearn.metrics </span><span class="s0">import </span><span class="s1">accuracy_score</span><span class="s0">, </span><span class="s1">classification_report</span><span class="s0">, </span><span class="s1">confusion_matrix</span>
+<span class="s0">from </span><span class="s1">sklearn.model_selection </span><span class="s0">import </span><span class="s1">GridSearchCV</span>
+<span class="s0">from </span><span class="s1">sklearn.model_selection </span><span class="s0">import </span><span class="s1">train_test_split</span>
+<span class="s0">from </span><span class="s1">sklearn.ensemble </span><span class="s0">import </span><span class="s1">RandomForestClassifier</span>
+
+<span class="s1">warnings.filterwarnings(</span><span class="s2">'ignore'</span><span class="s1">)</span>
+
+<span class="s1">data = pd.read_table(</span><span class="s2">'data.txt'</span><span class="s0">, </span><span class="s1">header=</span><span class="s0">None, </span><span class="s1">sep=</span><span class="s2">'_!_'</span><span class="s1">)  </span><span class="s3"># 讀入原始資料</span>
+<span class="s3"># pd.set_option('display.max_rows', None)</span>
+<span class="s1">pd.set_option(</span><span class="s2">'display.max_columns'</span><span class="s0">, None</span><span class="s1">)</span>
+<span class="s1">pd.set_option(</span><span class="s2">'display.width'</span><span class="s0">, None</span><span class="s1">)</span>
+<span class="s1">pd.set_option(</span><span class="s2">'display.max_colwidth'</span><span class="s0">, None</span><span class="s1">)</span>
+<span class="s1">pd.set_option(</span><span class="s2">'display.unicode.ambiguous_as_wide'</span><span class="s0">, True</span><span class="s1">)</span>
+<span class="s1">pd.set_option(</span><span class="s2">'display.unicode.east_asian_width'</span><span class="s0">, True</span><span class="s1">)</span>
+<span class="s1">stopwords = [line.strip() </span><span class="s0">for </span><span class="s1">line </span><span class="s0">in </span><span class="s1">open(</span><span class="s2">'stopwords.txt'</span><span class="s0">, </span><span class="s2">'r'</span><span class="s0">, </span><span class="s1">encoding=</span><span class="s2">'utf-8'</span><span class="s1">).readlines()]</span>
+<span class="s1">newdata_pd = pd.DataFrame({</span><span class="s2">'category'</span><span class="s1">: data[</span><span class="s4">1</span><span class="s1">]</span><span class="s0">, </span><span class="s2">'text'</span><span class="s1">: data[</span><span class="s4">3</span><span class="s1">]</span><span class="s0">, </span><span class="s2">'keyword'</span><span class="s1">: data[</span><span class="s4">4</span><span class="s1">]})</span>
+<span class="s3"># print(newdata_pd.head())</span>
+<span class="s3"># print(newdata_pd['category'].value_counts())  # 得出分類資料總數</span>
+<span class="s3"># for i in range(len(newdata_pd)):</span>
+<span class="s3">#     final = str()</span>
+<span class="s3">#     word = jieba.cut(newdata_pd.loc[i, 'text'])</span>
+<span class="s3">#     for j in word:</span>
+<span class="s3">#         if j not in stopwords and not bool(re.search(r'\d', j)):</span>
+<span class="s3">#             final += j + &quot; &quot;</span>
+<span class="s3">#     newdata_pd.loc[i, 'cleanedtext'] = final</span>
+<span class="s3"># newdata_pd.to_csv(&quot;newdata_pd.csv&quot;, encoding='utf_8_sig')  # 寫入csv以便之後讀取</span>
+<span class="s3"># print(newdata_pd.head())</span>
+<span class="s1">newdata_pd = pd.read_csv(</span><span class="s2">'newdata_pd.csv'</span><span class="s1">)</span>
+<span class="s1">tfidf_model = TfidfVectorizer(max_features=</span><span class="s4">3000</span><span class="s1">)  </span><span class="s3"># 設定特徵數量3000個</span>
+<span class="s1">tfidf_df = pd.DataFrame(tfidf_model.fit_transform(newdata_pd[</span><span class="s2">'cleanedtext'</span><span class="s1">].values.astype(</span><span class="s2">'U'</span><span class="s1">)).todense())</span>
+<span class="s1">tfidf_df.columns = sorted(tfidf_model.vocabulary_)</span>
+<span class="s1">print(tfidf_df)</span>
+
+
+<span class="s0">def </span><span class="s1">clf_model(model_type</span><span class="s0">, </span><span class="s1">x_train</span><span class="s0">, </span><span class="s1">y_train</span><span class="s0">, </span><span class="s1">x_test):</span>
+    <span class="s1">model = model_type.fit(x_train</span><span class="s0">, </span><span class="s1">y_train)  </span><span class="s3"># 套用模型</span>
+    <span class="s1">joblib.dump(model_type</span><span class="s0">, </span><span class="s2">'final_model.pkl'</span><span class="s1">)  </span><span class="s3"># 存入model</span>
+    <span class="s1">predicted_labels = model.predict(x_test)  </span><span class="s3"># 對x_test預測</span>
+    <span class="s0">return </span><span class="s1">predicted_labels  </span><span class="s3"># 得到預測的分類</span>
+
+
+<span class="s0">def </span><span class="s1">model_evaluation(actual_values</span><span class="s0">, </span><span class="s1">predicted_values):  </span><span class="s3"># 帶入actual_value(y_test的值),進行最後的評估</span>
+    <span class="s1">cfn_mat = confusion_matrix(actual_values</span><span class="s0">, </span><span class="s1">predicted_values)</span>
+    <span class="s1">print(</span><span class="s2">&quot;confusion matrix: </span><span class="s0">\n</span><span class="s2">&quot;</span><span class="s0">, </span><span class="s1">cfn_mat)</span>
+    <span class="s1">print(</span><span class="s2">&quot;</span><span class="s0">\n</span><span class="s2">accuracy: &quot;</span><span class="s0">, </span><span class="s1">accuracy_score(actual_values</span><span class="s0">, </span><span class="s1">predicted_values))</span>
+    <span class="s1">print(</span><span class="s2">&quot;</span><span class="s0">\n</span><span class="s2">classification report: </span><span class="s0">\n</span><span class="s2">&quot;</span><span class="s0">, </span><span class="s1">classification_report(actual_values</span><span class="s0">, </span><span class="s1">predicted_values))</span>
+
+
+<span class="s3"># 切分出test和train, x_train y_train表示訓練集,x_test y_test為事後驗證</span>
+<span class="s3"># 取用x_train y_train 做訓練其中包含驗證集約總體的15% 之後得出最好的超參數</span>
+<span class="s3"># 得到參數後改用此參數訓練 x_train y_train , 之後再使用clf_model預測分類後再帶入model evaluation得到report</span>
+<span class="s1">x_train</span><span class="s0">, </span><span class="s1">x_test</span><span class="s0">, </span><span class="s1">y_train</span><span class="s0">, </span><span class="s1">y_test = train_test_split(tfidf_df</span><span class="s0">, </span><span class="s1">newdata_pd[</span><span class="s2">'category'</span><span class="s1">]</span><span class="s0">, </span><span class="s1">random_state=</span><span class="s4">42</span><span class="s0">,</span>
+                                                    <span class="s1">stratify=newdata_pd[</span><span class="s2">'category'</span><span class="s1">]</span><span class="s0">, </span><span class="s1">test_size=</span><span class="s4">0.15</span><span class="s1">)</span>
+
+<span class="s3"># 設定要確認的超參數</span>
+<span class="s1">param_grid = [{</span>
+    <span class="s2">'n_estimators'</span><span class="s1">: [</span><span class="s4">3</span><span class="s0">, </span><span class="s4">5</span><span class="s0">, </span><span class="s4">10</span><span class="s1">]</span><span class="s0">,</span>
+    <span class="s2">'n_jobs'</span><span class="s1">: [-</span><span class="s4">1</span><span class="s1">]</span>
+<span class="s1">}]</span>
+
+<span class="s3"># forest = RandomForestClassifier()</span>
+<span class="s3"># # 18/85=0.17 約為五等份進行cross_validate 且紀錄每次的超參數以得到最好的結果</span>
+<span class="s3"># grid_search = GridSearchCV(forest, param_grid, cv=5,</span>
+<span class="s3">#                            scoring='accuracy')</span>
+<span class="s3"># grid_search.fit(x_train, y_train)</span>
+<span class="s3"># print(grid_search.best_params_)</span>
+<span class="s3"># print(grid_search.best_estimator_)</span>
+<span class="s3"># print出的結果</span>
+<span class="s3"># {'n_estimators': 10, 'n_jobs': -1}</span>
+<span class="s3"># RandomForestClassifier(n_estimators=10, n_jobs=-1)</span>
+
+<span class="s3"># forest = RandomForestClassifier(n_estimators=10, n_jobs=-1)</span>
+<span class="s3"># results = clf_model(forest, x_train, y_train, x_test)</span>
+<span class="s3"># model_evaluation(y_test, results)</span>
+
+<span class="s3">#最後測試用 不用重新建模</span>
+<span class="s1">final_model = joblib.load(</span><span class="s2">'final_model.pkl'</span><span class="s1">)</span>
+<span class="s1">predicted_labels = final_model.predict(x_test)</span>
+<span class="s1">model_evaluation(y_test</span><span class="s0">, </span><span class="s1">predicted_labels)</span>
+</pre>
+</body>
+</html>
